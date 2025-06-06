@@ -174,7 +174,14 @@ elif question_choice == "Q5.1: Peak Daily Cases":
     st.success(result_string)
     st.write("**Peak daily new cases for each country (sorted descending):**")
     st.dataframe(peak_daily_cases_df.loc[selected_countries].sort_values(ascending=False).to_frame(name="Peak Daily Cases"))
-
+    fig_q5_1, ax_q5_1 = plt.subplots(figsize=(8, 6))
+    peak_daily_cases_df.loc[selected_countries].sort_values(ascending=False).plot(kind='bar', ax=ax_q5_1)
+    ax_q5_1.set_title('Peak Daily New Cases')
+    ax_q5_1.set_xlabel('Country')
+    ax_q5_1.set_ylabel('Peak Number of Daily New Cases')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    st.pyplot(fig_q5_1)
 elif question_choice == "Q5.2: Recovery Rate Comparison":
     st.markdown("Comparison of recovery rates (`recoveries / confirmed`) between Canada and Australia as of December 31, 2020.")
     
@@ -190,7 +197,16 @@ elif question_choice == "Q5.2: Recovery Rate Comparison":
     winner = result_series.idxmax().iloc[0]
     rate = result_series.max().iloc[0]
     st.success(f"**{winner}** showed better management according to this metric, with a recovery rate of **{rate:.2%}** on {date_to_compare}.")
-
+    result_series_q5_2 = recovery_rate_df.loc[['Canada', 'Australia'], [date_to_compare]]
+    fig_q5_2, ax_q5_2 = plt.subplots(figsize=(7, 5))
+    result_series_q5_2.plot(kind='bar', ax=ax_q5_2)
+    ax_q5_2.set_title(f'Recovery Rate on {date_to_compare}')
+    ax_q5_2.set_ylabel('Recovery Rate (Recoveries / Confirmed)')
+    ax_q5_2.set_xlabel('Country')
+    ax_q5_2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.2%}'.format(x)))
+    plt.xticks(rotation=0)
+    plt.tight_layout()
+    st.pyplot(fig_q5_2)
 elif question_choice == "Q5.3: Canada Death Rate Distribution":
     st.markdown("Distribution of death rates (`deaths / confirmed`) among provinces in Canada as of the latest data point.")
     confirmed_Canada = confirmed[confirmed['Country/Region'] == 'Canada'].drop(['Country/Region', 'Lat', 'Long'], axis=1, errors='ignore').set_index('Province/State')
@@ -242,7 +258,13 @@ elif question_choice == "Q6.1-Q6.4: Data Transformation":
 
     st.write("Top 5 countries by average daily new deaths:")
     st.dataframe(avg_daily_deaths.head(5).to_frame(name="Average Daily Deaths"))
-
+    fig_q6_3, ax_q6_3 = plt.subplots(figsize=(10, 6))
+    avg_daily_deaths.head(5).sort_values().plot(kind='barh', ax=ax_q6_3)
+    ax_q6_3.set_title('Top 5 Countries by Average Daily New Deaths')
+    ax_q6_3.set_xlabel('Average Daily New Deaths')
+    ax_q6_3.set_ylabel('Country/Region')
+    plt.tight_layout()
+    st.pyplot(fig_q6_3)
     st.subheader("Q6.4: Evolution of Deaths in the US")
     st.markdown("This plot shows the trend of *cumulative* total deaths over time for the United States.")
     
@@ -292,7 +314,14 @@ elif question_choice == "Q8.1: 2020 Death Rate Analysis":
     grouped_merged_data_2020 = grouped_merged_data[grouped_merged_data['Date'].dt.year == 2020].copy()
     annual_grouped_merged_data_2020 = (grouped_merged_data_2020.groupby('Country/Region')['daily_deaths'].sum() / grouped_merged_data_2020.groupby('Country/Region')['daily_confirmed'].sum().replace(0, np.nan)).dropna().sort_values(ascending=False)
     st.dataframe(annual_grouped_merged_data_2020.head(3).to_frame(name="Overall 2020 Death Rate").style.format('{:.2%}'))
-
+    fig_q8_1, ax_q8_1 = plt.subplots(figsize=(10, 6))
+    annual_grouped_merged_data_2020.head(10).sort_values().plot(kind='barh', ax=ax_q8_1)
+    ax_q8_1.set_title('Top 3 Countries by Overall 2020 Death Rate')
+    ax_q8_1.set_xlabel('Overall 2020 Death Rate (Deaths / Confirmed)')
+    ax_q8_1.set_ylabel('Country/Region')
+    ax_q8_1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.2%}'.format(x)))
+    plt.tight_layout()
+    st.pyplot(fig_q8_1)
 elif question_choice == "Q8.2: South Africa Recoveries vs. Deaths":
     st.markdown("Comparison of total cumulative recoveries to total cumulative deaths in South Africa as of the latest date in the dataset.")
     sa_data = grouped_merged_data[grouped_merged_data['Country/Region'] == 'South Africa'].copy()
@@ -307,7 +336,20 @@ elif question_choice == "Q8.2: South Africa Recoveries vs. Deaths":
             st.metric("Recoveries per Death", f"{recovery_to_death_ratio:.2f}")
     else:
         st.error("Data for South Africa could not be found.")
+    latest_sa_data_q8_2 = sa_data[sa_data['Date'] == sa_data['Date'].max()] # Renaming
+    total_recovered_sa = latest_sa_data_q8_2['recovered'].iloc[0]
+    total_deaths_sa = latest_sa_data_q8_2['deaths'].iloc[0]
 
+    if not latest_sa_data_q8_2.empty:
+        metrics_sa = pd.Series({'Total Recoveries': total_recovered_sa, 'Total Deaths': total_deaths_sa})
+        fig_q8_2, ax_q8_2 = plt.subplots(figsize=(7, 5))
+        metrics_sa.plot(kind='bar', ax=ax_q8_2)
+        ax_q8_2.set_title('South Africa: Total Recoveries vs. Total Deaths (Latest Data)')
+        ax_q8_2.set_ylabel('Total Count')
+        plt.xticks(rotation=0)
+        plt.tight_layout()
+        st.pyplot(fig_q8_2)
+    
 elif question_choice == "Q8.3: US Monthly Recovery Ratio":
     st.markdown("Analysis of the ratio of `New Recoveries / New Confirmed Cases` for the United States on a monthly basis from March 2020 to May 2021.")
     us_data = grouped_merged_data[(grouped_merged_data['Country/Region'] == 'US') & (grouped_merged_data['Month-Year'] >= '2020-03') & (grouped_merged_data['Month-Year'] <= '2021-05')].copy()
@@ -320,4 +362,18 @@ elif question_choice == "Q8.3: US Monthly Recovery Ratio":
         highest_month = highest_rate_month_info.index[0]
         highest_rate_value = highest_rate_month_info['recovery_rate'].iloc[0]
         st.success(f"**Peak Month:** The highest recovery ratio of **{highest_rate_value:.2%}** occurred in **{highest_month}**.")
+    plot_data_q8_3 = us_monthly_totals.copy()
+    plot_data_q8_3.index = plot_data_q8_3.index.astype(str)
+
+
+    fig_q8_3, ax_q8_3 = plt.subplots(figsize=(12, 6))
+    ax_q8_3.plot(plot_data_q8_3.index, plot_data_q8_3['recovery_rate'], marker='o', linestyle='-')
+    ax_q8_3.set_title('US Monthly Recovery Ratio (New Recoveries / New Confirmed)')
+    ax_q8_3.set_xlabel('Month-Year')
+    ax_q8_3.set_ylabel('Recovery Ratio')
+    ax_q8_3.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.2%}'.format(x)))
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(True)
+    plt.tight_layout()
+    st.pyplot(fig_q8_3)
     st.warning("Data Quality Alert: US recovery data is unreliable from Dec 2020, affecting this ratio analysis.")
