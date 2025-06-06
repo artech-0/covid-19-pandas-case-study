@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import warnings
+import altair as alt
 warnings.filterwarnings('ignore')
 
 pd.set_option('display.max_rows', 100)
@@ -95,6 +96,8 @@ question_choice = st.sidebar.selectbox(
         "Q8.3: US Monthly Recovery Ratio"
     ]
 )
+st.sidebar.header("Plotting Options")
+dark_mode = st.sidebar.checkbox("Use Dark Mode for Plots", value=True)
 
 st.header(f"Analysis for {question_choice.split(':')[0]}")
 st.subheader(f"_{question_choice.split(':')[1].strip()}_")
@@ -125,28 +128,79 @@ elif question_choice == "Q2.2: Top Countries Plot":
     
     top_n_countries = confirmed.drop(['Lat','Long', 'Province/State'], axis=1, errors='ignore').groupby('Country/Region').sum().sort_values(by='5/29/21', ascending=False).T
     top_n_countries.index = pd.to_datetime(top_n_countries.index)
-
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()
     fig, ax = plt.subplots(figsize=(12, 8))
     top_n_countries.iloc[:, :top_n].plot(kind='line', ax=ax)
     ax.set_title(f'Confirmed COVID-19 Cases Over Time for Top {top_n} Countries')
     ax.set_xlabel('Date')
     ax.set_ylabel('Number of Confirmed Cases (Cumulative)')
-    ax.legend(title='Country/Region')
+    legend = ax.legend(title='Country/Region')
+    if dark_mode:
+        legend.get_frame().set_facecolor('black')
     ax.grid(True)
     plt.xticks(rotation=45)
     st.pyplot(fig)
+
+
+    log_scale = st.checkbox("Use Logarithmic Scale for Y-axis", False)
+
+    # Prepare data for Altair
+    top_n_countries_df = confirmed.drop(['Lat','Long', 'Province/State'], axis=1, errors='ignore').groupby('Country/Region').sum().sort_values(by='5/29/21', ascending=False).head(top_n).T
+    top_n_countries_df.index = pd.to_datetime(top_n_countries_df.index)
+    
+    # Melt the dataframe to long format
+    plot_data = top_n_countries_df.reset_index().melt('index', var_name='Country/Region', value_name='Cumulative Cases')
+    plot_data.rename(columns={'index': 'Date'}, inplace=True)
+
+    # Create the Altair chart
+    chart = alt.Chart(plot_data).mark_line().encode(
+        x=alt.X('Date:T', title='Date'),
+        y=alt.Y('Cumulative Cases:Q', title='Cumulative Confirmed Cases', scale=alt.Scale(type="log" if log_scale else "linear")),
+        color=alt.Color('Country/Region:N', title='Country'),
+        tooltip=['Date:T', 'Country/Region:N', alt.Tooltip('Cumulative Cases:Q', format=',')]
+    ).properties(
+        title=f'Confirmed COVID-19 Cases Over Time for Top {top_n} Countries',
+        width=800,
+        height=500
+    ).interactive()
+
+    st.altair_chart(chart, use_container_width=True)
 
 elif question_choice == "Q2.3: China Plot":
     st.markdown("A specific plot showing the evolution of cumulative confirmed cases over time for China.")
     top_n_countries = confirmed.drop(['Lat','Long', 'Province/State'], axis=1, errors='ignore').groupby('Country/Region').sum().sort_values(by='5/29/21', ascending=False).T
     top_n_countries.index = pd.to_datetime(top_n_countries.index)
-    
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()    
     fig, ax = plt.subplots(figsize=(12, 8))
     top_n_countries['China'].plot(kind='line', color='red', ax=ax)
     ax.set_title('Confirmed COVID-19 Cases Over Time for China')
     ax.set_xlabel('Date')
     ax.set_ylabel('Number of Confirmed Cases (Cumulative)')
-    ax.legend(title='Country/Region')
+    legend = ax.legend(title='Country/Region')
+    if dark_mode:
+        legend.get_frame().set_facecolor('black')
     ax.grid(True)
     plt.xticks(rotation=45)
     st.pyplot(fig)
@@ -174,6 +228,18 @@ elif question_choice == "Q5.1: Peak Daily Cases":
     st.success(result_string)
     st.write("**Peak daily new cases for each country (sorted descending):**")
     st.dataframe(peak_daily_cases_df.loc[selected_countries].sort_values(ascending=False).to_frame(name="Peak Daily Cases"))
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()    
     fig_q5_1, ax_q5_1 = plt.subplots(figsize=(8, 6))
     peak_daily_cases_df.loc[selected_countries].sort_values(ascending=False).plot(kind='bar', ax=ax_q5_1)
     ax_q5_1.set_title('Peak Daily New Cases')
@@ -198,6 +264,18 @@ elif question_choice == "Q5.2: Recovery Rate Comparison":
     rate = result_series.max().iloc[0]
     st.success(f"**{winner}** showed better management according to this metric, with a recovery rate of **{rate:.2%}** on {date_to_compare}.")
     result_series_q5_2 = recovery_rate_df.loc[['Canada', 'Australia'], [date_to_compare]]
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()    
     fig_q5_2, ax_q5_2 = plt.subplots(figsize=(7, 5))
     result_series_q5_2.plot(kind='bar', ax=ax_q5_2)
     ax_q5_2.set_title(f'Recovery Rate on {date_to_compare}')
@@ -216,7 +294,18 @@ elif question_choice == "Q5.3: Canada Death Rate Distribution":
     latest_rates = death_rate_canada_df[latest_date_col].replace(np.inf, np.nan).dropna()
     
     st.write(f"Death rates by province as of {latest_date_col}:")
-    
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()    
     fig, ax = plt.subplots(figsize=(10, 8))
     latest_rates.sort_values().plot(kind='barh', ax=ax)
     ax.set_title("Death Rates in Canadian Provinces")
@@ -242,7 +331,18 @@ elif question_choice == "Q6.1-Q6.4: Data Transformation":
     total_deaths_sorted = deaths_long[deaths_long['Date'] == deaths_long['Date'].max()].groupby('Country/Region')['Counts'].sum().sort_values(ascending=False)
     st.write("Top 10 countries by total cumulative deaths:")
     st.dataframe(total_deaths_sorted.head(10).to_frame(name="Total Cumulative Deaths"))
-
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()
     fig_q6_2, ax_q6_2 = plt.subplots(figsize=(12, 8))
     total_deaths_sorted.head(10).sort_values().plot(kind='barh', ax=ax_q6_2)
     ax_q6_2.set_title('Top 10 Countries by Total Cumulative Deaths')
@@ -266,6 +366,18 @@ elif question_choice == "Q6.1-Q6.4: Data Transformation":
 
     st.write("Top 5 countries by average daily new deaths:")
     st.dataframe(avg_daily_deaths.head(5).to_frame(name="Average Daily Deaths"))
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()
     fig_q6_3, ax_q6_3 = plt.subplots(figsize=(10, 6))
     avg_daily_deaths.head(5).sort_values().plot(kind='barh', ax=ax_q6_3)
     ax_q6_3.set_title('Top 5 Countries by Average Daily New Deaths')
@@ -277,7 +389,18 @@ elif question_choice == "Q6.1-Q6.4: Data Transformation":
     st.markdown("This plot shows the trend of *cumulative* total deaths over time for the United States.")
     
     us_deaths_cumulative = grouped_merged_data[grouped_merged_data['Country/Region'] == 'US']
-    
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()    
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.plot(us_deaths_cumulative['Date'], us_deaths_cumulative['deaths'])
     ax.set_title('Total Cumulative Deaths in the United States Over Time')
@@ -301,6 +424,18 @@ elif question_choice == "Q7.1-Q7.3: Data Merging & Monthly Analysis":
     selected_countries = st.multiselect("Select countries to plot monthly data:", country_list, default=default_countries)
     
     for country in selected_countries:
+        if dark_mode:
+            plt.style.use('dark_background')
+            
+            rc_params = {
+                'text.color': 'white', 'axes.labelcolor': 'white',
+                'xtick.color': 'white', 'ytick.color': 'white',
+                'axes.titlecolor': 'white'
+            }
+            plt.rcParams.update(rc_params)
+        else:
+            plt.style.use('fivethirtyeight')
+            plt.rcdefaults()
         fig, ax = plt.subplots(figsize=(12, 8))
         country_data = monthly_merged_df[monthly_merged_df['Country/Region'] == country]
         ax.plot(country_data['Month-Year'].astype(str), country_data['daily_confirmed'], label='Confirmed', color='blue', marker='o', linestyle='-')
@@ -309,7 +444,9 @@ elif question_choice == "Q7.1-Q7.3: Data Merging & Monthly Analysis":
         ax.set_title(f'Monthly New Cases, Deaths, and Recoveries in {country}')
         ax.set_xlabel('Month-Year')
         ax.set_ylabel('Number of Monthly Events')
-        ax.legend()
+        legend = ax.legend()
+        if dark_mode:
+            legend.get_frame().set_facecolor('black')
         ax.grid(True)
         plt.xticks(rotation=45)
         st.pyplot(fig)
@@ -322,6 +459,18 @@ elif question_choice == "Q8.1: 2020 Death Rate Analysis":
     grouped_merged_data_2020 = grouped_merged_data[grouped_merged_data['Date'].dt.year == 2020].copy()
     annual_grouped_merged_data_2020 = (grouped_merged_data_2020.groupby('Country/Region')['daily_deaths'].sum() / grouped_merged_data_2020.groupby('Country/Region')['daily_confirmed'].sum().replace(0, np.nan)).dropna().sort_values(ascending=False)
     st.dataframe(annual_grouped_merged_data_2020.head(3).to_frame(name="Overall 2020 Death Rate").style.format('{:.2%}'))
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()
     fig_q8_1, ax_q8_1 = plt.subplots(figsize=(10, 6))
     annual_grouped_merged_data_2020.head(10).sort_values().plot(kind='barh', ax=ax_q8_1)
     ax_q8_1.set_title('Top 3 Countries by Overall 2020 Death Rate')
@@ -350,6 +499,18 @@ elif question_choice == "Q8.2: South Africa Recoveries vs. Deaths":
 
     if not latest_sa_data_q8_2.empty:
         metrics_sa = pd.Series({'Total Recoveries': total_recovered_sa, 'Total Deaths': total_deaths_sa})
+        if dark_mode:
+            plt.style.use('dark_background')
+            
+            rc_params = {
+                'text.color': 'white', 'axes.labelcolor': 'white',
+                'xtick.color': 'white', 'ytick.color': 'white',
+                'axes.titlecolor': 'white'
+            }
+            plt.rcParams.update(rc_params)
+        else:
+            plt.style.use('fivethirtyeight')
+            plt.rcdefaults()
         fig_q8_2, ax_q8_2 = plt.subplots(figsize=(7, 5))
         metrics_sa.plot(kind='bar', ax=ax_q8_2)
         ax_q8_2.set_title('South Africa: Total Recoveries vs. Total Deaths (Latest Data)')
@@ -373,7 +534,18 @@ elif question_choice == "Q8.3: US Monthly Recovery Ratio":
     plot_data_q8_3 = us_monthly_totals.copy()
     plot_data_q8_3.index = plot_data_q8_3.index.astype(str)
 
-
+    if dark_mode:
+        plt.style.use('dark_background')
+        
+        rc_params = {
+            'text.color': 'white', 'axes.labelcolor': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white',
+            'axes.titlecolor': 'white'
+        }
+        plt.rcParams.update(rc_params)
+    else:
+        plt.style.use('fivethirtyeight')
+        plt.rcdefaults()
     fig_q8_3, ax_q8_3 = plt.subplots(figsize=(12, 6))
     ax_q8_3.plot(plot_data_q8_3.index, plot_data_q8_3['recovery_rate'], marker='o', linestyle='-')
     ax_q8_3.set_title('US Monthly Recovery Ratio (New Recoveries / New Confirmed)')
