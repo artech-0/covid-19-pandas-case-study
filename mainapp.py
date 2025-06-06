@@ -243,6 +243,14 @@ elif question_choice == "Q6.1-Q6.4: Data Transformation":
     st.write("Top 10 countries by total cumulative deaths:")
     st.dataframe(total_deaths_sorted.head(10).to_frame(name="Total Cumulative Deaths"))
 
+    fig_q6_2, ax_q6_2 = plt.subplots(figsize=(12, 8))
+    total_deaths_sorted.head(10).sort_values().plot(kind='barh', ax=ax_q6_2)
+    ax_q6_2.set_title('Top 10 Countries by Total Cumulative Deaths')
+    ax_q6_2.set_xlabel('Total Cumulative Deaths')
+    ax_q6_2.set_ylabel('Country/Region')
+    plt.tight_layout()
+    st.pyplot(fig_q6_2)
+
     st.subheader("Q6.3: Top 5 Countries by Average Daily Deaths")
     st.markdown("Here, we calculate the average of the *new* deaths reported each day for every country.")
 
