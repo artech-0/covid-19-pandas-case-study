@@ -273,9 +273,9 @@ elif question_choice == "Q7.1-Q7.3: Data Merging & Monthly Analysis":
     for country in selected_countries:
         fig, ax = plt.subplots(figsize=(12, 8))
         country_data = monthly_merged_df[monthly_merged_df['Country/Region'] == country]
-        ax.plot(country_data['Month-Year'].astype(str), country_data['daily_confirmed'], label='Confirmed', color='blue')
-        ax.plot(country_data['Month-Year'].astype(str), country_data['daily_deaths'], label='Deaths', color='red')
-        ax.plot(country_data['Month-Year'].astype(str), country_data['daily_recovered'], label='Recovered', color='green')
+        ax.plot(country_data['Month-Year'].astype(str), country_data['daily_confirmed'], label='Confirmed', color='blue', marker='o', linestyle='-')
+        ax.plot(country_data['Month-Year'].astype(str), country_data['daily_deaths'], label='Deaths', color='red', marker='o', linestyle='-')
+        ax.plot(country_data['Month-Year'].astype(str), country_data['daily_recovered'], label='Recovered', color='green', marker='o', linestyle='-')
         ax.set_title(f'Monthly New Cases, Deaths, and Recoveries in {country}')
         ax.set_xlabel('Month-Year')
         ax.set_ylabel('Number of Monthly Events')
