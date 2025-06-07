@@ -552,7 +552,7 @@ elif question_choice == "Q8.3: US Monthly Recovery Ratio":
         text_color = '#333333'
         arrow_color = 'black'
 
-    fig_q8_3, ax_q8_3 = plt.subplots(figsize=(12, 8))
+    fig_q8_3, ax_q8_3 = plt.subplots(figsize=(12, 6))
     ax_q8_3.plot(plot_data_q8_3.index, plot_data_q8_3['recovery_rate'], marker='o', linestyle='-')
     ax_q8_3.set_title('US Monthly Recovery Ratio (New Recoveries / New Confirmed)')
     ax_q8_3.set_xlabel('Month-Year')
@@ -566,7 +566,7 @@ elif question_choice == "Q8.3: US Monthly Recovery Ratio":
     peak_rec_value = us_monthly_totals.loc[peak_daily_recovery_idx, 'recovery_rate']
     if peak_rec_value > 0:
         peak_date_str = str(us_monthly_totals.loc[peak_daily_recovery_idx, 'Month-Year'])
-        ax_q8_3.annotate('Peak Recovery', xy=(peak_date_str, peak_rec_value), xytext=(peak_date_str, peak_rec_value + ax_q8_3.get_ylim()[1] * 0.1), ha='center', arrowprops=dict(arrowstyle="->", color=arrow_color), bbox=dict(boxstyle="round,pad=0.3", fc='yellow', alpha=0.7), color='black')    
+        ax_q8_3.annotate('Peak Recovery', xy=(peak_date_str, peak_rec_value), xytext=(peak_date_str, peak_rec_value + ax_q8_3.get_ylim()[1] * 0.3), ha='center', arrowprops=dict(arrowstyle="->", color=arrow_color), bbox=dict(boxstyle="round,pad=0.3", fc='yellow', alpha=0.7), color='black')    
 
     plt.tight_layout()
     st.pyplot(fig_q8_3)
@@ -581,7 +581,7 @@ elif question_choice == "Q8.3: US Monthly Recovery Ratio":
     peak_rec_value = us_monthly_totals.loc[peak_daily_recovery_idx, 'cumu_recovery_rate']
     if peak_rec_value > 0:
         peak_date_str = str(us_monthly_totals.loc[peak_daily_recovery_idx, 'Month-Year'])
-        ax_q8_3_2.annotate('Peak Total Recovery', xy=(peak_date_str, peak_rec_value), xytext=(peak_date_str, peak_rec_value + ax_q8_3.get_ylim()[1] * 0.1), ha='center', arrowprops=dict(arrowstyle="->", color=arrow_color), bbox=dict(boxstyle="round,pad=0.3", fc='yellow', alpha=0.7), color='black')    
+        ax_q8_3_2.annotate('Peak Total Recovery', xy=(peak_date_str, peak_rec_value), xytext=(peak_date_str, peak_rec_value + ax_q8_3_2.get_ylim()[1] * 0.2), ha='center', arrowprops=dict(arrowstyle="->", color=arrow_color), bbox=dict(boxstyle="round,pad=0.3", fc='yellow', alpha=0.7), color='black')    
 
     plt.xticks(rotation=45, ha='right')
     plt.grid(True)
